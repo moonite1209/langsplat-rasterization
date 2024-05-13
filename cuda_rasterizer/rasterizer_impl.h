@@ -56,7 +56,7 @@ namespace CudaRasterizer
 	{
 		size_t sorting_size;
 		uint64_t* point_list_keys_unsorted;
-		uint64_t* point_list_keys;
+		uint64_t* point_list_keys; // |tileId,depth|
 		uint32_t* point_list_unsorted;
 		uint32_t* point_list;
 		char* list_sorting_space;

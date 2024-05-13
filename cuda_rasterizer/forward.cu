@@ -293,7 +293,7 @@ renderCUDA(
 	// Load start/end range of IDs to process in bit sorted list.
 	uint2 range = ranges[block.group_index().y * horizontal_blocks + block.group_index().x];
 	const int rounds = ((range.y - range.x + BLOCK_SIZE - 1) / BLOCK_SIZE);
-	int toDo = range.y - range.x;
+	int toDo = range.y - range.x; // 还有多少3D gaussian需要处理
 
 	// Allocate storage for batches of collectively fetched data.
 	__shared__ int collected_id[BLOCK_SIZE];
@@ -319,7 +319,7 @@ renderCUDA(
 		int progress = i * BLOCK_SIZE + block.thread_rank();
 		if (range.x + progress < range.y)
 		{
-			int coll_id = point_list[range.x + progress];
+			int coll_id = point_list[range.x + progress]; // 当前处理的3D gaussian的id
 			collected_id[block.thread_rank()] = coll_id;
 			collected_xy[block.thread_rank()] = points_xy_image[coll_id];
 			collected_conic_opacity[block.thread_rank()] = conic_opacity[coll_id];
@@ -334,10 +334,10 @@ renderCUDA(
 
 			// Resample using conic matrix (cf. "Surface 
 			// Splatting" by Zwicker et al., 2001)
-			float2 xy = collected_xy[j];
-			float2 d = { xy.x - pixf.x, xy.y - pixf.y };
-			float4 con_o = collected_conic_opacity[j];
-			float power = -0.5f * (con_o.x * d.x * d.x + con_o.z * d.y * d.y) - con_o.y * d.x * d.y;
+			float2 xy = collected_xy[j]; // 当前处理的2D gaussian在图像上的中心点坐标
+			float2 d = { xy.x - pixf.x, xy.y - pixf.y }; // 当前处理的2D gaussian的中心点到当前处理的pixel的offset
+			float4 con_o = collected_conic_opacity[j]; // 当前处理的2D gaussian的协方差矩阵的逆矩阵以及它的不透明度
+			float power = -0.5f * (con_o.x * d.x * d.x + con_o.z * d.y * d.y) - con_o.y * d.x * d.y; // 计算高斯分布的强度（或权重），用于确定像素在光栅化过程中的贡献程度
 			if (power > 0.0f)
 				continue;
 
@@ -345,11 +345,11 @@ renderCUDA(
 			// Obtain alpha by multiplying with Gaussian opacity
 			// and its exponential falloff from mean.
 			// Avoid numerical instabilities (see paper appendix). 
-			float alpha = min(0.99f, con_o.w * exp(power));   // opacity * G(x)
+			float alpha = min(0.99f, con_o.w * exp(power));   // opacity * G(x) alpha为当前3dgs球的颜色在剩余比例中的占比
 			if (alpha < 1.0f / 255.0f)
 				continue;
-			float test_T = T * (1 - alpha);
-			if (test_T < 0.0001f)
+			float test_T = T * (1 - alpha); // 剩余比例，即该3dgs球之后的高斯球的颜色的占比
+			if (test_T < 0.0001f) // 后面的3dgs占比太小就不考虑了，结束该像素的积分
 			{
 				done = true;
 				continue;
@@ -357,7 +357,7 @@ renderCUDA(
 
 			// Eq. (3) from 3D Gaussian splatting paper.
 			for (int ch = 0; ch < CHANNELS; ch++)
-				C[ch] += features[collected_id[j] * CHANNELS + ch] * alpha * T;
+				C[ch] += features[collected_id[j] * CHANNELS + ch] * alpha * T; //alpha * T为当前3dgs球的颜色在最终结果中的占比
 
 			if (include_feature)
 			{
@@ -377,10 +377,10 @@ renderCUDA(
 	// rendering data to the frame and auxiliary buffers.
 	if (inside)
 	{
-		final_T[pix_id] = T;
-		n_contrib[pix_id] = last_contributor;
+		final_T[pix_id] = T; // 渲染过程后每个像素的最终透明度或透射率值
+		n_contrib[pix_id] = last_contributor; // 最后一个贡献的2D gaussian是谁
 		for (int ch = 0; ch < CHANNELS; ch++)
-			out_color[ch * H * W + pix_id] = C[ch] + T * bg_color[ch];
+			out_color[ch * H * W + pix_id] = C[ch] + T * bg_color[ch]; //加上背景颜色
 		
 		if (include_feature) 
 		{
@@ -408,7 +408,7 @@ void FORWARD::render(
 	float* out_language_feature,
 	bool include_feature)
 {
-	renderCUDA<NUM_CHANNELS, NUM_CHANNELS_language_feature> << <grid, block >> > (
+	renderCUDA<NUM_CHANNELS, NUM_CHANNELS_language_feature> <<<grid, block >>> (
 		ranges,
 		point_list,
 		W, H,
@@ -451,7 +451,7 @@ void FORWARD::preprocess(int P, int D, int M,
 	uint32_t* tiles_touched,
 	bool prefiltered)
 {
-	preprocessCUDA<NUM_CHANNELS> << <(P + 255) / 256, 256 >> > (
+	preprocessCUDA<NUM_CHANNELS> <<<(P + 255) / 256, 256 >>> (
 		P, D, M,
 		means3D,
 		scales,
