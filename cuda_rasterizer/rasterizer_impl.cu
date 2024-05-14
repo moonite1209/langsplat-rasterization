@@ -218,6 +218,7 @@ int CudaRasterizer::Rasterizer::forward(
 	const bool prefiltered,
 	float* out_color,
 	float* out_language_feature,
+	float* out_max_weight,
 	int* radii,
 	bool debug,
 	bool include_feature)
@@ -344,6 +345,7 @@ int CudaRasterizer::Rasterizer::forward(
 		background,
 		out_color,
 		out_language_feature,
+		out_max_weight,
 		include_feature), debug) // 增加了参数
 
 

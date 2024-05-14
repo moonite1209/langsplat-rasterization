@@ -62,6 +62,7 @@ namespace FORWARD
 		const float* bg_color,
 		float* out_color,
 		float* out_language_feature,
+		float* out_max_weight,
 		bool include_feature);
 }
 

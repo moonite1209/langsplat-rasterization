@@ -274,6 +274,7 @@ renderCUDA(
 	const float* __restrict__ bg_color,
 	float* __restrict__ out_color,
 	float* __restrict__ out_language_feature,
+	float* __restrict__ out_max_weight,
 	bool include_feature)
 {
 	// Identify current tile and associated min/max pixel range.
@@ -366,7 +367,10 @@ renderCUDA(
 			}
 
 			T = test_T;
-
+			if(alpha * T > out_max_weight[ 0 * H * W + pix_id]){
+				out_max_weight[ 0 * H * W + pix_id] = alpha * T;
+				out_max_weight[ 1 * H * W + pix_id] = collected_id[j];
+			}
 			// Keep track of last range entry to update this
 			// pixel.
 			last_contributor = contributor;
@@ -406,6 +410,7 @@ void FORWARD::render(
 	const float* bg_color,
 	float* out_color,
 	float* out_language_feature,
+	float* out_max_weight,
 	bool include_feature)
 {
 	renderCUDA<NUM_CHANNELS, NUM_CHANNELS_language_feature> <<<grid, block >>> (
@@ -421,6 +426,7 @@ void FORWARD::render(
 		bg_color,
 		out_color,
 		out_language_feature,
+		out_max_weight,
 		include_feature);
 
 }
