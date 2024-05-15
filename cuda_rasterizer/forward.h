@@ -56,14 +56,16 @@ namespace FORWARD
 		const float2* points_xy_image,
 		const float* features,
 		const float* language_feature,
+		const float* language_feature_3d,
 		const float4* conic_opacity,
 		float* final_T,
 		uint32_t* n_contrib,
 		const float* bg_color,
 		float* out_color,
 		float* out_language_feature,
-		float* out_max_weight,
-		bool include_feature);
+		float* out_language_feature_3d,
+		bool include_feature,
+		bool include_feature_3d);
 }
 
 

@@ -11,6 +11,7 @@
 
 #include "backward.h"
 #include "auxiliary.h"
+#include "config.h"
 #include <cooperative_groups.h>
 #include <cooperative_groups/reduce.h>
 namespace cg = cooperative_groups;
@@ -396,9 +397,9 @@ __global__ void preprocessCUDA(
 }
 
 // Backward version of the rendering procedure.
-template <uint32_t C, uint32_t F>
+template <uint32_t C, uint32_t F, uint32_t F_3d>
 __global__ void __launch_bounds__(BLOCK_X * BLOCK_Y)
-renderCUDA(
+ renderCUDA(
 	const uint2* __restrict__ ranges,
 	const uint32_t* __restrict__ point_list,
 	int W, int H,
@@ -407,16 +408,20 @@ renderCUDA(
 	const float4* __restrict__ conic_opacity,
 	const float* __restrict__ colors,
 	const float* __restrict__ language_feature,
+	const float* __restrict__ language_feature_3d,
 	const float* __restrict__ final_Ts,
 	const uint32_t* __restrict__ n_contrib,
 	const float* __restrict__ dL_dpixels,
 	const float* __restrict__ dL_dpixels_F,
+	const float* __restrict__ dL_dpixels_F_3d,
 	float3* __restrict__ dL_dmean2D,
 	float4* __restrict__ dL_dconic2D,
 	float* __restrict__ dL_dopacity,
 	float* __restrict__ dL_dcolors,
 	float* __restrict__ dL_dlanguage_feature,
-	bool include_feature)
+	float* __restrict__ dL_dlanguage_feature_3d,
+	bool include_feature,
+	bool include_feature_3d)
 {
 	// We rasterize again. Compute necessary block info.
 	auto block = cg::this_thread_block();
@@ -485,7 +490,7 @@ renderCUDA(
 		const int progress = i * BLOCK_SIZE + block.thread_rank();
 		if (range.x + progress < range.y)
 		{
-			const int coll_id = point_list[range.y - progress - 1];
+			const int coll_id = point_list[range.y - progress - 1]; //反向
 			collected_id[block.thread_rank()] = coll_id;
 			collected_xy[block.thread_rank()] = points_xy_image[coll_id];
 			collected_conic_opacity[block.thread_rank()] = conic_opacity[coll_id];
@@ -511,17 +516,17 @@ renderCUDA(
 			const float2 xy = collected_xy[j];
 			const float2 d = { xy.x - pixf.x, xy.y - pixf.y };
 			const float4 con_o = collected_conic_opacity[j];
-			const float power = -0.5f * (con_o.x * d.x * d.x + con_o.z * d.y * d.y) - con_o.y * d.x * d.y;
+			const float power = -0.5f * (con_o.x * d.x * d.x + con_o.z * d.y * d.y) - con_o.y * d.x * d.y; //指数
 			if (power > 0.0f)
 				continue;
 
 			const float G = exp(power);
-			const float alpha = min(0.99f, con_o.w * G);
+			const float alpha = min(0.99f, con_o.w * G); //opacity * 概率密度
 			if (alpha < 1.0f / 255.0f)
 				continue;
 
 			T = T / (1.f - alpha);
-			const float dchannel_dcolor = alpha * T;
+			const float dchannel_dcolor = alpha * T; // C=sum_1^N(c_i*alpha_i prod_1^i-1(1-alpha_j)) => dC/dc_i = alpha_i * T_i
 
 			// Propagate gradients to per-Gaussian colors and keep
 			// gradients w.r.t. alpha (blending factor for a Gaussian/pixel
@@ -669,18 +674,22 @@ void BACKWARD::render(
 	const float4* conic_opacity,
 	const float* colors,
 	const float* language_feature,
+	const float* language_feature_3d,
 	const float* final_Ts,
 	const uint32_t* n_contrib,
 	const float* dL_dpixels,
 	const float* dL_dpixels_F,
+	const float* dL_dpixels_F_3d,
 	float3* dL_dmean2D,
 	float4* dL_dconic2D,
 	float* dL_dopacity,
 	float* dL_dcolors,
 	float* dL_dlanguage_feature,
-	bool include_feature)
+	float* dL_dlanguage_feature_3d,
+	bool include_feature,
+	bool include_feature_3d)
 {
-	renderCUDA<NUM_CHANNELS, NUM_CHANNELS_language_feature> <<<grid, block >>>(
+	renderCUDA<NUM_CHANNELS, NUM_CHANNELS_language_feature, NUM_CHANNELS_language_feature_3d> <<<grid, block >>>(
 		ranges,
 		point_list,
 		W, H,
@@ -689,15 +698,19 @@ void BACKWARD::render(
 		conic_opacity,
 		colors,
 		language_feature,
+		language_feature_3d,
 		final_Ts,
 		n_contrib,
 		dL_dpixels,
 		dL_dpixels_F,
+		dL_dpixels_F_3d,
 		dL_dmean2D,
 		dL_dconic2D,
 		dL_dopacity,
 		dL_dcolors,
 		dL_dlanguage_feature,
-		include_feature);
+		dL_dlanguage_feature_3d,
+		include_feature,
+		include_feature_3d);
  
 }

@@ -9,6 +9,7 @@
  * For inquiries contact  george.drettakis@inria.fr
  */
 
+#include "config.h"
 #include "forward.h"
 #include "auxiliary.h"
 #include <cooperative_groups.h>
@@ -190,7 +191,7 @@ __global__ void preprocessCUDA(int P, int D, int M,
 	tiles_touched[idx] = 0;
 
 	// Perform near culling, quit if outside.
-	float3 p_view;
+	float3 p_view; //相机坐标系
 	if (!in_frustum(idx, orig_points, viewmatrix, projmatrix, prefiltered, p_view))
 		return;
 
@@ -259,7 +260,7 @@ __global__ void preprocessCUDA(int P, int D, int M,
 // Main rasterization method. Collaboratively works on one tile per
 // block, each thread treats one pixel. Alternates between fetching 
 // and rasterizing data.
-template <uint32_t CHANNELS, uint32_t CHANNELS_language_feature>
+template <uint32_t CHANNELS, uint32_t CHANNELS_language_feature, uint32_t CHANNELS_language_feature_3d>
 __global__ void __launch_bounds__(BLOCK_X * BLOCK_Y)
 renderCUDA(
 	const uint2* __restrict__ ranges,
@@ -268,14 +269,16 @@ renderCUDA(
 	const float2* __restrict__ points_xy_image,
 	const float* __restrict__ features,
 	const float* __restrict__ language_feature,
+	const float* __restrict__ language_feature_3d,
 	const float4* __restrict__ conic_opacity,
 	float* __restrict__ final_T,
 	uint32_t* __restrict__ n_contrib,
 	const float* __restrict__ bg_color,
 	float* __restrict__ out_color,
 	float* __restrict__ out_language_feature,
-	float* __restrict__ out_max_weight,
-	bool include_feature)
+	float* __restrict__ out_language_feature_3d,
+	bool include_feature,
+	bool include_feature_3d)
 {
 	// Identify current tile and associated min/max pixel range.
 	auto block = cg::this_thread_block();
@@ -307,6 +310,8 @@ renderCUDA(
 	uint32_t last_contributor = 0;
 	float C[CHANNELS] = { 0 };
 	float F[CHANNELS_language_feature] = { 0 };
+	float max_weight = 0.0f;
+	int max_id = 0;
 
 	// Iterate over batches until all done or range is complete
 	for (int i = 0; i < rounds; i++, toDo -= BLOCK_SIZE)
@@ -367,9 +372,9 @@ renderCUDA(
 			}
 
 			T = test_T;
-			if(alpha * T > out_max_weight[ 0 * H * W + pix_id]){
-				out_max_weight[ 0 * H * W + pix_id] = alpha * T;
-				out_max_weight[ 1 * H * W + pix_id] = collected_id[j];
+			if(alpha * T > max_weight){
+				max_weight = alpha * T;
+				max_id = collected_id[j];
 			}
 			// Keep track of last range entry to update this
 			// pixel.
@@ -391,7 +396,8 @@ renderCUDA(
 			for (int ch = 0; ch < CHANNELS_language_feature; ch++)
 				out_language_feature[ch * H * W + pix_id] = F[ch]; //bg_color ???
 		}
-		
+		for (int ch = 0; ch < CHANNELS_language_feature_3d; ch++)
+			out_language_feature_3d[ch * H * W + pix_id] = language_feature_3d[max_id * CHANNELS_language_feature_3d + ch];
 	}
 
 }
@@ -404,30 +410,34 @@ void FORWARD::render(
 	const float2* means2D,
 	const float* colors,
 	const float* language_feature,
+	const float* language_feature_3d,
 	const float4* conic_opacity,
 	float* final_T,
 	uint32_t* n_contrib,
 	const float* bg_color,
 	float* out_color,
 	float* out_language_feature,
-	float* out_max_weight,
-	bool include_feature)
+	float* out_language_feature_3d,
+	bool include_feature,
+	bool include_feature_3d)
 {
-	renderCUDA<NUM_CHANNELS, NUM_CHANNELS_language_feature> <<<grid, block >>> (
+	renderCUDA<NUM_CHANNELS, NUM_CHANNELS_language_feature, NUM_CHANNELS_language_feature_3d> <<<grid, block >>> (
 		ranges,
 		point_list,
 		W, H,
 		means2D,
 		colors,
 		language_feature,
+		language_feature_3d,
 		conic_opacity,
 		final_T,
 		n_contrib,
 		bg_color,
 		out_color,
 		out_language_feature,
-		out_max_weight,
-		include_feature);
+		out_language_feature_3d,
+		include_feature,
+		include_feature_3d);
 
 }
 

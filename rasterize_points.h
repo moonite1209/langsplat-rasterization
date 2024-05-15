@@ -21,6 +21,7 @@ RasterizeGaussiansCUDA(
 	const torch::Tensor& means3D,
     const torch::Tensor& colors,
 	const torch::Tensor& language_feature,
+	const torch::Tensor& language_feature_3d,
     const torch::Tensor& opacity,
 	const torch::Tensor& scales,
 	const torch::Tensor& rotations,
@@ -37,7 +38,8 @@ RasterizeGaussiansCUDA(
 	const torch::Tensor& campos,
 	const bool prefiltered,
 	const bool debug,
-	const bool include_feature);
+	const bool include_feature,
+	const bool include_feature_3d);
 
 std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
  RasterizeGaussiansBackwardCUDA(
@@ -46,6 +48,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Te
 	const torch::Tensor& radii,
     const torch::Tensor& colors,
 	const torch::Tensor& language_feature,
+	const torch::Tensor& language_feature_3d,
 	const torch::Tensor& scales,
 	const torch::Tensor& rotations,
 	const float scale_modifier,
@@ -56,6 +59,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Te
 	const float tan_fovy,
     const torch::Tensor& dL_dout_color,
 	const torch::Tensor& dL_dout_language_feature,
+	const torch::Tensor& dL_dout_language_feature_3d,
 	const torch::Tensor& sh,
 	const int degree,
 	const torch::Tensor& campos,
@@ -64,7 +68,8 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Te
 	const torch::Tensor& binningBuffer,
 	const torch::Tensor& imageBuffer,
 	const bool debug,
-	const bool include_feature);
+	const bool include_feature,
+	const bool include_feature_3d);
 		
 torch::Tensor markVisible(
 		torch::Tensor& means3D,

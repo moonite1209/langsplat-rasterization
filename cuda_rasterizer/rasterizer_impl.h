@@ -28,26 +28,26 @@ namespace CudaRasterizer
 
 	struct GeometryState
 	{
-		size_t scan_size;
-		float* depths;
-		char* scanning_space;
-		bool* clamped;
+		size_t scan_size; //scan缓冲区大小
+		float* depths; // 相机坐标系中z的大小
+		char* scanning_space; //scan缓冲区
+		bool* clamped; //颜色计算结果是否小于0
 		int* internal_radii;
 		float2* means2D;
 		float* cov3D;
 		float4* conic_opacity;
 		float* rgb;
 		uint32_t* point_offsets;
-		uint32_t* tiles_touched;
+		uint32_t* tiles_touched; //覆盖到的tiles
 
 		static GeometryState fromChunk(char*& chunk, size_t P);
 	};
 
 	struct ImageState
 	{
-		uint2* ranges;
-		uint32_t* n_contrib;
-		float* accum_alpha;
+		uint2* ranges; //该像素所在tile对应的高斯球在point_list中的范围
+		uint32_t* n_contrib; // 最后一个有贡献的高斯球
+		float* accum_alpha; // 最终透明度即背景颜色的权重
 
 		static ImageState fromChunk(char*& chunk, size_t N);
 	};

@@ -206,6 +206,7 @@ int CudaRasterizer::Rasterizer::forward(
 	const float* shs,
 	const float* colors_precomp,
 	const float* language_feature_precomp, // 增加了参数
+	const float* language_feature_3d_precomp, // 增加了参数
 	const float* opacities,
 	const float* scales,
 	const float scale_modifier,
@@ -218,10 +219,11 @@ int CudaRasterizer::Rasterizer::forward(
 	const bool prefiltered,
 	float* out_color,
 	float* out_language_feature,
-	float* out_max_weight,
+	float* out_language_feature_3d,
 	int* radii,
 	bool debug,
-	bool include_feature)
+	bool include_feature,
+	bool include_feature_3d)
 {
 	const float focal_y = height / (2.0f * tan_fovy);
 	const float focal_x = width / (2.0f * tan_fovx);
@@ -324,6 +326,7 @@ int CudaRasterizer::Rasterizer::forward(
 	// Let each tile blend its range of Gaussians independently in parallel
 	const float* feature_ptr = colors_precomp != nullptr ? colors_precomp : geomState.rgb;
 	const float* language_feature_ptr = language_feature_precomp;
+	const float* language_feature_3d_ptr = language_feature_3d_precomp;
 	
 	
 	// cudaEvent_t start, stop; //事件对象
@@ -339,13 +342,14 @@ int CudaRasterizer::Rasterizer::forward(
 		geomState.means2D,
 		feature_ptr,
 		language_feature_ptr,
+		language_feature_3d_ptr,
 		geomState.conic_opacity,
 		imgState.accum_alpha,
 		imgState.n_contrib,
 		background,
 		out_color,
 		out_language_feature,
-		out_max_weight,
+		out_language_feature_3d,
 		include_feature), debug) // 增加了参数
 
 
@@ -366,6 +370,7 @@ void CudaRasterizer::Rasterizer::backward(
 	const float* shs,
 	const float* colors_precomp,
 	const float* language_feature_precomp,
+	const float* language_feature_3d_precomp,
 	const float* scales,
 	const float scale_modifier,
 	const float* rotations,
@@ -380,18 +385,21 @@ void CudaRasterizer::Rasterizer::backward(
 	char* img_buffer,
 	const float* dL_dpix,
 	const float* dL_dpix_F,
+	const float* dL_dpix_F_3d,
 	float* dL_dmean2D,
 	float* dL_dconic,
 	float* dL_dopacity,
 	float* dL_dcolor,
 	float* dL_dlanguage_feature,
+	float* dL_dlanguage_feature_3d,
 	float* dL_dmean3D,
 	float* dL_dcov3D,
 	float* dL_dsh,
 	float* dL_dscale,
 	float* dL_drot,
 	bool debug,
-	bool include_feature)
+	bool include_feature,
+	bool include_feature_3d)
 {
 	GeometryState geomState = GeometryState::fromChunk(geom_buffer, P);
 	BinningState binningState = BinningState::fromChunk(binning_buffer, R);
@@ -413,6 +421,7 @@ void CudaRasterizer::Rasterizer::backward(
 	// If we were given precomputed colors and not SHs, use them.
 	const float* color_ptr = (colors_precomp != nullptr) ? colors_precomp : geomState.rgb;
 	const float* language_feature_ptr = language_feature_precomp;
+	const float* language_feature_3d_ptr = language_feature_3d_precomp;
 
 	CHECK_CUDA(BACKWARD::render(
 		tile_grid,
@@ -425,16 +434,20 @@ void CudaRasterizer::Rasterizer::backward(
 		geomState.conic_opacity,
 		color_ptr,
 		language_feature_ptr,
-		imgState.accum_alpha,
-		imgState.n_contrib,
-		dL_dpix,
-		dL_dpix_F,
-		(float3*)dL_dmean2D,
-		(float4*)dL_dconic,
-		dL_dopacity,
-		dL_dcolor,
-		dL_dlanguage_feature,
-		include_feature), debug)
+		language_feature_3d_ptr,
+		imgState.accum_alpha, //输入最终透明度
+		imgState.n_contrib, //输入最后一个有贡献的高斯球
+		dL_dpix, //输入颜色梯度
+		dL_dpix_F, //输入特征梯度
+		dL_dpix_F_3d, //输入特征梯度
+		(float3*)dL_dmean2D, //输出
+		(float4*)dL_dconic, //输出
+		dL_dopacity, //输出
+		dL_dcolor, //输出
+		dL_dlanguage_feature, //输出
+		dL_dlanguage_feature_3d, //输出
+		include_feature,
+		include_feature_3d), debug)
 
 	// Take care of the rest of preprocessing. Was the precomputed covariance
 	// given to us or a scales/rot pair? If precomputed, pass that. If not,
