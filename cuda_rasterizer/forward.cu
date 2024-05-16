@@ -399,8 +399,11 @@ renderCUDA(
 			for (int ch = 0; ch < CHANNELS_language_feature; ch++)
 				out_language_feature[ch * H * W + pix_id] = F[ch]; //bg_color ???
 		}
-		for (int ch = 0; ch < CHANNELS_language_feature_3d; ch++)
-			out_language_feature_3d[ch * H * W + pix_id] = language_feature_3d[max_id * CHANNELS_language_feature_3d + ch];
+		if(include_feature_3d){
+			for (int ch = 0; ch < CHANNELS_language_feature_3d; ch++)
+				out_language_feature_3d[ch * H * W + pix_id] = language_feature_3d[max_id * CHANNELS_language_feature_3d + ch];
+			// out_language_feature_3d[pix_id] = max_contrib[pix_id];
+		}
 	}
 
 }
