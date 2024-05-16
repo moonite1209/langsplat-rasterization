@@ -189,6 +189,7 @@ class GaussianRasterizationSettings(NamedTuple):
     prefiltered : bool
     debug : bool
     include_feature: bool
+    include_feature_3d: bool
 
 class GaussianRasterizer(nn.Module):
     def __init__(self, raster_settings):

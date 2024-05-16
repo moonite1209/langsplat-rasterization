@@ -346,11 +346,13 @@ int CudaRasterizer::Rasterizer::forward(
 		geomState.conic_opacity,
 		imgState.accum_alpha,
 		imgState.n_contrib,
+		imgState.max_contrib,
 		background,
 		out_color,
 		out_language_feature,
 		out_language_feature_3d,
-		include_feature), debug) // 增加了参数
+		include_feature,
+		include_feature_3d), debug) // 增加了参数
 
 
 	// cudaEventRecord(stop, stream);
@@ -437,6 +439,7 @@ void CudaRasterizer::Rasterizer::backward(
 		language_feature_3d_ptr,
 		imgState.accum_alpha, //输入最终透明度
 		imgState.n_contrib, //输入最后一个有贡献的高斯球
+		imgState.max_contrib, //输入贡献最大的高斯球
 		dL_dpix, //输入颜色梯度
 		dL_dpix_F, //输入特征梯度
 		dL_dpix_F_3d, //输入特征梯度
