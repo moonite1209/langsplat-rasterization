@@ -570,7 +570,7 @@ __global__ void __launch_bounds__(BLOCK_X * BLOCK_Y)
 			if(include_feature_3d){
 				for (int ch = 0; ch < F_3d; ch++){
 					if(global_id == max_contributor)
-						dL_dlanguage_feature_3d[global_id*F_3d + ch]=1.f;
+						dL_dlanguage_feature_3d[global_id*F_3d + ch]=1.f * dL_dpixels_F_3d[ch*H*W + pix_id];
 					else
 						dL_dlanguage_feature_3d[global_id*F_3d + ch]=0.f;
 				}
