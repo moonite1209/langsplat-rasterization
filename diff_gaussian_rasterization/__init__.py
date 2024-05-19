@@ -110,9 +110,7 @@ class _RasterizeGaussians(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, grad_out_color, grad_out_language_feature, grad_out_language_feature_3d, _):
-        # print(ctx,grad_out_color.shape,grad_out_language_feature.shape,grad_out_language_feature_3d.shape,_.shape,sep='\n')
-        # traceback.print_stack()
-        
+        # print(grad_out_language_feature_3d[:,180:200,180:200])
         # Restore necessary values from context
         num_rendered = ctx.num_rendered
         raster_settings = ctx.raster_settings
@@ -172,7 +170,8 @@ class _RasterizeGaussians(torch.autograd.Function):
             grad_cov3Ds_precomp,
             None,
         )
-
+        # print(grad_language_feature_3d_precomp[7200:7300])
+        # raise ValueError("here")
         return grads
 
 class GaussianRasterizationSettings(NamedTuple):
