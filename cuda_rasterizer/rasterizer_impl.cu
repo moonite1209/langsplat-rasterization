@@ -223,8 +223,7 @@ int CudaRasterizer::Rasterizer::forward(
 	float* out_language_feature_3d,
 	int* radii,
 	bool debug,
-	bool include_feature,
-	bool include_feature_3d)
+	int mode)
 {
 	const float focal_y = height / (2.0f * tan_fovy);
 	const float focal_x = width / (2.0f * tan_fovx);
@@ -352,8 +351,7 @@ int CudaRasterizer::Rasterizer::forward(
 		out_color,
 		out_language_feature,
 		out_language_feature_3d,
-		include_feature,
-		include_feature_3d), debug) // 增加了参数
+		mode), debug) // 增加了参数
 
 
 	// cudaEventRecord(stop, stream);
@@ -401,8 +399,7 @@ void CudaRasterizer::Rasterizer::backward(
 	float* dL_dscale,
 	float* dL_drot,
 	bool debug,
-	bool include_feature,
-	bool include_feature_3d)
+	int mode)
 {
 	GeometryState geomState = GeometryState::fromChunk(geom_buffer, P);
 	BinningState binningState = BinningState::fromChunk(binning_buffer, R);
@@ -450,8 +447,7 @@ void CudaRasterizer::Rasterizer::backward(
 		dL_dcolor, //输出
 		dL_dlanguage_feature, //输出
 		dL_dlanguage_feature_3d, //输出
-		include_feature,
-		include_feature_3d), debug)
+		mode), debug)
 
 	// Take care of the rest of preprocessing. Was the precomputed covariance
 	// given to us or a scales/rot pair? If precomputed, pass that. If not,

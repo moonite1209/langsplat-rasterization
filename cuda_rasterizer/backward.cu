@@ -422,8 +422,7 @@ __global__ void __launch_bounds__(BLOCK_X * BLOCK_Y)
 	float* __restrict__ dL_dcolors,
 	float* __restrict__ dL_dlanguage_feature,
 	float* __restrict__ dL_dlanguage_feature_3d,
-	bool include_feature,
-	bool include_feature_3d)
+	int mode)
 {
 	// We rasterize again. Compute necessary block info.
 	auto block = cg::this_thread_block();
@@ -473,7 +472,7 @@ __global__ void __launch_bounds__(BLOCK_X * BLOCK_Y)
 	float dL_dpixel_F[F] = {0};
 	float last_language_feature[F] = {0};
 
-	if (include_feature) {
+	if (mode==M_LANGSPLAT) {
 		if (inside)
 			for (int i = 0; i < F; i++)
 				dL_dpixel_F[i] = dL_dpixels_F[i * H * W + pix_id];
@@ -499,7 +498,7 @@ __global__ void __launch_bounds__(BLOCK_X * BLOCK_Y)
 			collected_conic_opacity[block.thread_rank()] = conic_opacity[coll_id];
 			for (int i = 0; i < C; i++)
 				collected_colors[i * BLOCK_SIZE + block.thread_rank()] = colors[coll_id * C + i];
-			if (include_feature) {
+			if (mode==M_LANGSPLAT) {
 				for (int i = 0; i < F; i++)
 					collected_feature[i * BLOCK_SIZE + block.thread_rank()] = language_feature[coll_id * F + i];
 			}
@@ -551,7 +550,7 @@ __global__ void __launch_bounds__(BLOCK_X * BLOCK_Y)
 				atomicAdd(&(dL_dcolors[global_id * C + ch]), dchannel_dcolor * dL_dchannel);
 			}
 
-			if (include_feature) {
+			if (mode==M_LANGSPLAT) {
 				for (int ch = 0; ch < F; ch++)
 				{
 					const float f = collected_feature[ch * BLOCK_SIZE + j];
@@ -567,7 +566,7 @@ __global__ void __launch_bounds__(BLOCK_X * BLOCK_Y)
 					atomicAdd(&(dL_dlanguage_feature[global_id * F + ch]), dchannel_dcolor * dL_dchannel_F);
 				}
 			}
-			if(include_feature_3d){
+			if(mode==M_OURS){
 				if(global_id == max_contributor){
 					for (int ch = 0; ch < F_3d; ch++){
 						atomicAdd(&dL_dlanguage_feature_3d[global_id*F_3d + ch], 1.f * dL_dpixels_F_3d[ch*H*W + pix_id]);
@@ -697,8 +696,7 @@ void BACKWARD::render(
 	float* dL_dcolors,
 	float* dL_dlanguage_feature,
 	float* dL_dlanguage_feature_3d,
-	bool include_feature,
-	bool include_feature_3d)
+	int mode)
 {
 	renderCUDA<NUM_CHANNELS, NUM_CHANNELS_language_feature, NUM_CHANNELS_language_feature_3d> <<<grid, block >>>(
 		ranges,
@@ -722,6 +720,5 @@ void BACKWARD::render(
 		dL_dcolors,
 		dL_dlanguage_feature,
 		dL_dlanguage_feature_3d,
-		include_feature,
-		include_feature_3d);
+		mode);
 }

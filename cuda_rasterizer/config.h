@@ -17,5 +17,8 @@
 #define NUM_CHANNELS_language_feature_3d 3
 #define BLOCK_X 16
 #define BLOCK_Y 16
+#define M_3DGS 0
+#define M_LANGSPLAT 1
+#define M_OURS 2
 
 #endif

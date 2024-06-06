@@ -19,6 +19,14 @@ def cpu_deep_copy_tuple(input_tuple):
     copied_tensors = [item.cpu().clone() if isinstance(item, torch.Tensor) else item for item in input_tuple]
     return tuple(copied_tensors)
 
+def mode_to_int(mode):
+    if mode=='3dgs':
+        return 0
+    elif mode=='langsplat':
+        return 1
+    elif mode=='ours':
+        return 2
+
 def rasterize_gaussians(
     means3D,
     means2D,
@@ -86,8 +94,7 @@ class _RasterizeGaussians(torch.autograd.Function):
             raster_settings.campos,
             raster_settings.prefiltered,
             raster_settings.debug,
-            raster_settings.include_feature,
-            raster_settings.include_feature_3d
+            mode_to_int(raster_settings.mode)
         )
 
         # Invoke C++/CUDA rasterizer
@@ -142,8 +149,7 @@ class _RasterizeGaussians(torch.autograd.Function):
                 binningBuffer,
                 imgBuffer,
                 raster_settings.debug,
-                raster_settings.include_feature,
-                raster_settings.include_feature_3d)
+                mode_to_int(raster_settings.mode))
 
         # Compute gradients for relevant tensors by invoking backward method
         if raster_settings.debug:
@@ -187,8 +193,7 @@ class GaussianRasterizationSettings(NamedTuple):
     campos : torch.Tensor
     prefiltered : bool
     debug : bool
-    include_feature: bool
-    include_feature_3d: bool
+    mode : int
 
 class GaussianRasterizer(nn.Module):
     def __init__(self, raster_settings):

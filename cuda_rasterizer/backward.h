@@ -43,8 +43,7 @@ namespace BACKWARD
 		float* dL_dcolors,
 		float* dL_dlanguage_feature,
 		float* dL_dlanguage_feature_3d,
-		bool include_feature,
-		bool include_feature_3d);
+		int mode);
 
 	void preprocess(
 		int P, int D, int M,

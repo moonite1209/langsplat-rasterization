@@ -279,8 +279,7 @@ renderCUDA(
 	float* __restrict__ out_color,
 	float* __restrict__ out_language_feature,
 	float* __restrict__ out_language_feature_3d,
-	bool include_feature,
-	bool include_feature_3d)
+	int mode)
 {
 	// Identify current tile and associated min/max pixel range.
 	auto block = cg::this_thread_block();
@@ -367,7 +366,7 @@ renderCUDA(
 			for (int ch = 0; ch < CHANNELS; ch++)
 				C[ch] += features[collected_id[j] * CHANNELS + ch] * alpha * T; //alpha * T为当前3dgs球的颜色在最终结果中的占比
 
-			if (include_feature)
+			if (mode==M_LANGSPLAT)
 			{
 				for (int ch = 0; ch < CHANNELS_language_feature; ch++)
 					F[ch] += language_feature[collected_id[j] * CHANNELS_language_feature + ch] * alpha * T;
@@ -394,12 +393,12 @@ renderCUDA(
 		for (int ch = 0; ch < CHANNELS; ch++)
 			out_color[ch * H * W + pix_id] = C[ch] + T * bg_color[ch]; //加上背景颜色
 		
-		if (include_feature) 
+		if (mode==M_LANGSPLAT) 
 		{
 			for (int ch = 0; ch < CHANNELS_language_feature; ch++)
 				out_language_feature[ch * H * W + pix_id] = F[ch]; //bg_color ???
 		}
-		if(include_feature_3d){
+		if(mode==M_OURS){
 			for (int ch = 0; ch < CHANNELS_language_feature_3d; ch++)
 				out_language_feature_3d[ch * H * W + pix_id] = language_feature_3d[max_id * CHANNELS_language_feature_3d + ch];
 			// out_language_feature_3d[pix_id] = max_contrib[pix_id];
@@ -425,8 +424,7 @@ void FORWARD::render(
 	float* out_color,
 	float* out_language_feature,
 	float* out_language_feature_3d,
-	bool include_feature,
-	bool include_feature_3d)
+	int mode)
 {
 	renderCUDA<NUM_CHANNELS, NUM_CHANNELS_language_feature, NUM_CHANNELS_language_feature_3d> <<<grid, block >>> (
 		ranges,
@@ -444,8 +442,7 @@ void FORWARD::render(
 		out_color,
 		out_language_feature,
 		out_language_feature_3d,
-		include_feature,
-		include_feature_3d);
+		mode);
 
 }
 
