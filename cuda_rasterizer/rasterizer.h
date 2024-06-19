@@ -55,7 +55,7 @@ namespace CudaRasterizer
 			float* out_language_feature_3d,
 			int* radii = nullptr,
 			bool debug = false,
-			int mode);
+			int mode=0);
 
 		static void backward(
 			const int P, int D, int M, int R,
