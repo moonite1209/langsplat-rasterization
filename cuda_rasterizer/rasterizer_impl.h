@@ -38,7 +38,7 @@ namespace CudaRasterizer
 		float4* conic_opacity;
 		float* rgb;
 		uint32_t* point_offsets;
-		uint32_t* tiles_touched; //覆盖到的tiles
+		uint32_t* tiles_touched; //覆盖到的tiles的个数
 
 		static GeometryState fromChunk(char*& chunk, size_t P);
 	};
