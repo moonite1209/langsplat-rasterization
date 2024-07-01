@@ -53,6 +53,7 @@ namespace CudaRasterizer
 			float* out_color,
 			float* out_language_feature,
 			float* out_language_feature_3d,
+			float* out_blending_language_feature_3d,
 			int* radii = nullptr,
 			bool debug = false,
 			int mode=0);
@@ -81,6 +82,7 @@ namespace CudaRasterizer
 			const float* dL_dpix,
 			const float* dL_dpix_F,
 			const float* dL_dpix_F_3d,
+			const float* dL_dpix_bF_3d,
 			float* dL_dmean2D,
 			float* dL_dconic,
 			float* dL_dopacity,

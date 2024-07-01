@@ -32,7 +32,7 @@ std::function<char*(size_t N)> resizeFunctional(torch::Tensor& t) {
     return lambda;
 }
 
-std::tuple<int, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
+std::tuple<int, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
 RasterizeGaussiansCUDA(
 	const torch::Tensor& background,
 	const torch::Tensor& means3D,
@@ -77,11 +77,14 @@ RasterizeGaussiansCUDA(
 	out_language_feature = torch::full({1}, 0.0, float_opts);
   }
   torch::Tensor out_language_feature_3d;
+  torch::Tensor out_blending_language_feature_3d;
   if (mode==M_OURS) {
 	out_language_feature_3d = torch::full({NUM_CHANNELS_language_feature_3d, H, W}, 0.0, float_opts);
+	out_blending_language_feature_3d = torch::full({NUM_CHANNELS_language_feature_3d, H, W}, 0.0, float_opts);
   }
   else {
 	out_language_feature_3d = torch::full({1}, 0.0, float_opts);
+	out_blending_language_feature_3d = torch::full({1}, 0.0, float_opts);
   }
   torch::Tensor radii = torch::full({P}, 0, means3D.options().dtype(torch::kInt32));
   
@@ -128,11 +131,12 @@ RasterizeGaussiansCUDA(
 		out_color.contiguous().data<float>(),
 		out_language_feature.contiguous().data<float>(),
 		out_language_feature_3d.contiguous().data<float>(),
+		out_blending_language_feature_3d.contiguous().data<float>(),
 		radii.contiguous().data<int>(),
 		debug,
 		mode);
   }
-  return std::make_tuple(rendered, out_color, out_language_feature, out_language_feature_3d, radii, geomBuffer, binningBuffer, imgBuffer);
+  return std::make_tuple(rendered, out_color, out_language_feature, out_language_feature_3d, out_blending_language_feature_3d, radii, geomBuffer, binningBuffer, imgBuffer);
 }
 
 std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
@@ -154,6 +158,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Te
     const torch::Tensor& dL_dout_color,
 	const torch::Tensor& dL_dout_language_feature,
 	const torch::Tensor& dL_dout_language_feature_3d,
+	const torch::Tensor& dL_dout_blending_language_feature_3d,
 	const torch::Tensor& sh,
 	const int degree,
 	const torch::Tensor& campos,
@@ -226,6 +231,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Te
 	  dL_dout_color.contiguous().data<float>(),
 	  dL_dout_language_feature.contiguous().data<float>(),
 	  dL_dout_language_feature_3d.contiguous().data<float>(),
+	  dL_dout_blending_language_feature_3d.contiguous().data<float>(),
 	  dL_dmeans2D.contiguous().data<float>(),
 	  dL_dconic.contiguous().data<float>(),  
 	  dL_dopacity.contiguous().data<float>(),

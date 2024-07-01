@@ -65,6 +65,7 @@ namespace FORWARD
 		float* out_color,
 		float* out_language_feature,
 		float* out_language_feature_3d,
+		float* out_blending_language_feature_3d,
 		int mode);
 }
 

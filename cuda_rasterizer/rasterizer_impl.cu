@@ -221,6 +221,7 @@ int CudaRasterizer::Rasterizer::forward(
 	float* out_color,
 	float* out_language_feature,
 	float* out_language_feature_3d,
+	float* out_blending_language_feature_3d,
 	int* radii,
 	bool debug,
 	int mode)
@@ -351,6 +352,7 @@ int CudaRasterizer::Rasterizer::forward(
 		out_color,
 		out_language_feature,
 		out_language_feature_3d,
+		out_blending_language_feature_3d,
 		mode), debug) // 增加了参数
 
 
@@ -387,6 +389,7 @@ void CudaRasterizer::Rasterizer::backward(
 	const float* dL_dpix,
 	const float* dL_dpix_F,
 	const float* dL_dpix_F_3d,
+	const float* dL_dpix_bF_3d,
 	float* dL_dmean2D,
 	float* dL_dconic,
 	float* dL_dopacity,
@@ -441,6 +444,7 @@ void CudaRasterizer::Rasterizer::backward(
 		dL_dpix, //输入颜色梯度
 		dL_dpix_F, //输入特征梯度
 		dL_dpix_F_3d, //输入特征梯度
+		dL_dpix_bF_3d, //输入特征梯度
 		(float3*)dL_dmean2D, //输出
 		(float4*)dL_dconic, //输出
 		dL_dopacity, //输出

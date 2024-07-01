@@ -107,16 +107,16 @@ class _RasterizeGaussians(torch.autograd.Function):
                 print("\nAn error occured in forward. Please forward snapshot_fw.dump for debugging.")
                 raise ex
         else:
-            num_rendered, color, language_feature, language_feature_3d, radii, geomBuffer, binningBuffer, imgBuffer = _C.rasterize_gaussians(*args)
+            num_rendered, color, language_feature, language_feature_3d, blending_language_feature_3d, radii, geomBuffer, binningBuffer, imgBuffer = _C.rasterize_gaussians(*args)
 
         # Keep relevant tensors for backward
         ctx.raster_settings = raster_settings
         ctx.num_rendered = num_rendered
         ctx.save_for_backward(colors_precomp, language_feature_precomp, language_feature_3d_precomp, means3D, scales, rotations, cov3Ds_precomp, radii, sh, geomBuffer, binningBuffer, imgBuffer)
-        return color, language_feature, language_feature_3d, radii
+        return color, language_feature, language_feature_3d, blending_language_feature_3d, radii
 
     @staticmethod
-    def backward(ctx, grad_out_color, grad_out_language_feature, grad_out_language_feature_3d, _):
+    def backward(ctx, grad_out_color, grad_out_language_feature, grad_out_language_feature_3d, grad_out_blending_language_feature_3d, _):
         # print(grad_out_language_feature_3d[:,180:200,180:200])
         # Restore necessary values from context
         num_rendered = ctx.num_rendered
@@ -141,6 +141,7 @@ class _RasterizeGaussians(torch.autograd.Function):
                 grad_out_color, # (3,H,W)
                 grad_out_language_feature, # (3,H,W)
                 grad_out_language_feature_3d, # (3,H,W)
+                grad_out_blending_language_feature_3d, # (3,H,W)
                 sh, 
                 raster_settings.sh_degree, 
                 raster_settings.campos,
