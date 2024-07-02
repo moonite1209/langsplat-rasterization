@@ -60,7 +60,7 @@ namespace FORWARD
 		const float4* conic_opacity,
 		float* final_T,
 		uint32_t* n_contrib,
-		uint32_t* max_contributor,
+		int* max_contributor,
 		float* max_contribute,
 		const float* bg_color,
 		float* out_color,

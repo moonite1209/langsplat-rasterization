@@ -224,7 +224,7 @@ int CudaRasterizer::Rasterizer::forward(
 	float* out_language_feature_3d,
 	float* out_blending_language_feature_3d,
 	int* radii,
-	uint32_t* max_contributor,
+	int* max_contributor,
 	float* max_contribute,
 	bool debug,
 	int mode)

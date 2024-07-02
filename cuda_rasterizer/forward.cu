@@ -274,7 +274,7 @@ renderCUDA(
 	const float4* __restrict__ conic_opacity,
 	float* __restrict__ final_T,
 	uint32_t* __restrict__ n_contrib,
-	uint32_t* __restrict__ max_contributor,
+	int* __restrict__ max_contributor,
 	float* __restrict__ max_contribute,
 	const float* __restrict__ bg_color,
 	float* __restrict__ out_color,
@@ -315,7 +315,7 @@ renderCUDA(
 	float F[CHANNELS_language_feature] = { 0 };
 	float bF[CHANNELS_language_feature_3d] = { 0 };
 	float max_weight = 0.0f;
-	uint32_t max_id = 0;
+	int max_id = 0;
 
 	// Iterate over batches until all done or range is complete
 	for (int i = 0; i < rounds; i++, toDo -= BLOCK_SIZE)
@@ -429,7 +429,7 @@ void FORWARD::render(
 	const float4* conic_opacity,
 	float* final_T,
 	uint32_t* n_contrib,
-	uint32_t* max_contributor,
+	int* max_contributor,
 	float* max_contribute,
 	const float* bg_color,
 	float* out_color,
