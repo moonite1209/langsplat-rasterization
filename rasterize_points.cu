@@ -136,7 +136,7 @@ RasterizeGaussiansCUDA(
 		out_blending_language_feature_3d.contiguous().data<float>(),
 		radii.contiguous().data<int>(),
 		max_contributor.contiguous().data<int>(),
-		max_contribute.contiguous().data<int>(),
+		max_contribute.contiguous().data<float>(),
 		debug,
 		mode);
   }
