@@ -33,7 +33,7 @@ namespace BACKWARD
 		const float* language_feature_3d,
 		const float* final_Ts,
 		const uint32_t* n_contrib,
-		const uint32_t* max_contrib,
+		const int* max_contrib,
 		const float* dL_dpixels,
 		const float* dL_dpixels_F,
 		const float* dL_dpixels_F_3d,

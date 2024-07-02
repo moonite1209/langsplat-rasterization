@@ -412,7 +412,7 @@ __global__ void __launch_bounds__(BLOCK_X * BLOCK_Y)
 	const float* __restrict__ language_feature_3d,
 	const float* __restrict__ final_Ts,
 	const uint32_t* __restrict__ n_contrib,
-	const uint32_t* __restrict__ max_contrib,
+	const int* __restrict__ max_contrib,
 	const float* __restrict__ dL_dpixels,
 	const float* __restrict__ dL_dpixels_F,
 	const float* __restrict__ dL_dpixels_F_3d,
@@ -459,7 +459,7 @@ __global__ void __launch_bounds__(BLOCK_X * BLOCK_Y)
 	// Gaussian is known from each pixel from the forward.
 	uint32_t contributor = toDo;
 	const int last_contributor = inside ? n_contrib[pix_id] : 0;
-	const uint32_t max_contributor = inside ? max_contrib[pix_id] : 0;
+	const int max_contributor = inside ? max_contrib[pix_id] : 0;
 
 	float accum_rec[C] = { 0 };
 	float dL_dpixel[C];
@@ -715,7 +715,7 @@ void BACKWARD::render(
 	const float* language_feature_3d,
 	const float* final_Ts,
 	const uint32_t* n_contrib,
-	const uint32_t* max_contrib,
+	const int* max_contrib,
 	const float* dL_dpixels,
 	const float* dL_dpixels_F,
 	const float* dL_dpixels_F_3d,
