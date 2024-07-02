@@ -274,7 +274,8 @@ renderCUDA(
 	const float4* __restrict__ conic_opacity,
 	float* __restrict__ final_T,
 	uint32_t* __restrict__ n_contrib,
-	uint32_t* __restrict__ max_contrib,
+	uint32_t* __restrict__ max_contributor,
+	float* __restrict__ max_contribute,
 	const float* __restrict__ bg_color,
 	float* __restrict__ out_color,
 	float* __restrict__ out_language_feature,
@@ -395,7 +396,8 @@ renderCUDA(
 	{
 		final_T[pix_id] = T; // 渲染过程后每个像素的最终透明度或透射率值
 		n_contrib[pix_id] = last_contributor; // 最后一个贡献的2D gaussian是谁
-		max_contrib[pix_id] = max_id;
+		max_contributor[pix_id] = max_id;
+		max_contribute[pix_id] = max_weight;
 		for (int ch = 0; ch < CHANNELS; ch++)
 			out_color[ch * H * W + pix_id] = C[ch] + T * bg_color[ch]; //加上背景颜色
 		
@@ -427,7 +429,8 @@ void FORWARD::render(
 	const float4* conic_opacity,
 	float* final_T,
 	uint32_t* n_contrib,
-	uint32_t* max_contrib,
+	uint32_t* max_contributor,
+	float* max_contribute,
 	const float* bg_color,
 	float* out_color,
 	float* out_language_feature,
@@ -446,7 +449,8 @@ void FORWARD::render(
 		conic_opacity,
 		final_T,
 		n_contrib,
-		max_contrib,
+		max_contributor,
+		max_contribute,
 		bg_color,
 		out_color,
 		out_language_feature,

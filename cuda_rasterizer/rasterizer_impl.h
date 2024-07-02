@@ -48,7 +48,8 @@ namespace CudaRasterizer
 		uint2* ranges; //该像素所在tile对应的高斯球在point_list中的范围
 		uint32_t* n_contrib; // 最后一个有贡献的高斯球
 		float* accum_alpha; // 最终透明度即背景颜色的权重,final_T
-		uint32_t* max_contrib; // 贡献最大的高斯球
+		uint32_t* max_contributor; // 贡献最大的高斯球
+		float* max_contribute; // 贡献最大的高斯球的贡献
 
 		static ImageState fromChunk(char*& chunk, size_t N);
 	};

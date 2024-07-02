@@ -55,6 +55,8 @@ namespace CudaRasterizer
 			float* out_language_feature_3d,
 			float* out_blending_language_feature_3d,
 			int* radii = nullptr,
+			uint32_t* max_contributor = nullptr,
+			float* max_contribute = nullptr,
 			bool debug = false,
 			int mode=0);
 

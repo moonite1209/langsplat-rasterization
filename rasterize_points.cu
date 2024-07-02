@@ -32,7 +32,7 @@ std::function<char*(size_t N)> resizeFunctional(torch::Tensor& t) {
     return lambda;
 }
 
-std::tuple<int, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
+std::tuple<int, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
 RasterizeGaussiansCUDA(
 	const torch::Tensor& background,
 	const torch::Tensor& means3D,
@@ -87,6 +87,8 @@ RasterizeGaussiansCUDA(
 	out_blending_language_feature_3d = torch::full({1}, 0.0, float_opts);
   }
   torch::Tensor radii = torch::full({P}, 0, means3D.options().dtype(torch::kInt32));
+  torch::Tensor max_contributor = torch::full({P}, 0, means3D.options().dtype(torch::kInt32));
+  torch::Tensor max_contribute = torch::full({P}, 0, means3D.options().dtype(torch::kFloat32));
   
   torch::Device device(torch::kCUDA);
   torch::TensorOptions options(torch::kByte);
@@ -133,10 +135,12 @@ RasterizeGaussiansCUDA(
 		out_language_feature_3d.contiguous().data<float>(),
 		out_blending_language_feature_3d.contiguous().data<float>(),
 		radii.contiguous().data<int>(),
+		max_contributor.contiguous().data<int>(),
+		max_contribute.contiguous().data<int>(),
 		debug,
 		mode);
   }
-  return std::make_tuple(rendered, out_color, out_language_feature, out_language_feature_3d, out_blending_language_feature_3d, radii, geomBuffer, binningBuffer, imgBuffer);
+  return std::make_tuple(rendered, out_color, out_language_feature, out_language_feature_3d, out_blending_language_feature_3d, radii, max_contributor, max_contribute, geomBuffer, binningBuffer, imgBuffer);
 }
 
 std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>

@@ -172,7 +172,8 @@ CudaRasterizer::GeometryState CudaRasterizer::GeometryState::fromChunk(char*& ch
 CudaRasterizer::ImageState CudaRasterizer::ImageState::fromChunk(char*& chunk, size_t N)
 {
 	ImageState img;
-	obtain(chunk, img.max_contrib, N, 128);
+	obtain(chunk, img.max_contribute, N, 128);
+	obtain(chunk, img.max_contributor, N, 128);
 	obtain(chunk, img.accum_alpha, N, 128);
 	obtain(chunk, img.n_contrib, N, 128);
 	obtain(chunk, img.ranges, N, 128);
@@ -223,6 +224,8 @@ int CudaRasterizer::Rasterizer::forward(
 	float* out_language_feature_3d,
 	float* out_blending_language_feature_3d,
 	int* radii,
+	uint32_t* max_contributor,
+	float* max_contribute,
 	bool debug,
 	int mode)
 {
@@ -245,6 +248,15 @@ int CudaRasterizer::Rasterizer::forward(
 	size_t img_chunk_size = required<ImageState>(width * height);
 	char* img_chunkptr = imageBuffer(img_chunk_size);
 	ImageState imgState = ImageState::fromChunk(img_chunkptr, width * height);
+
+	if (max_contributor == nullptr)
+	{
+		max_contributor = imgState.max_contributor;
+	}
+	if (max_contribute == nullptr)
+	{
+		max_contribute = imgState.max_contribute;
+	}
 
 	if (NUM_CHANNELS != 3 && colors_precomp == nullptr)
 	{
@@ -347,7 +359,8 @@ int CudaRasterizer::Rasterizer::forward(
 		geomState.conic_opacity,
 		imgState.accum_alpha,
 		imgState.n_contrib,
-		imgState.max_contrib,
+		imgState.max_contributor,
+		imgState.max_contribute,
 		background,
 		out_color,
 		out_language_feature,
@@ -440,7 +453,7 @@ void CudaRasterizer::Rasterizer::backward(
 		language_feature_3d_ptr,
 		imgState.accum_alpha, //输入最终透明度
 		imgState.n_contrib, //输入最后一个有贡献的高斯球
-		imgState.max_contrib, //输入贡献最大的高斯球
+		imgState.max_contributor, //输入贡献最大的高斯球
 		dL_dpix, //输入颜色梯度
 		dL_dpix_F, //输入特征梯度
 		dL_dpix_F_3d, //输入特征梯度
