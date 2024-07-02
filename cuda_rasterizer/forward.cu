@@ -312,6 +312,7 @@ renderCUDA(
 	uint32_t last_contributor = 0;
 	float C[CHANNELS] = { 0 };
 	float F[CHANNELS_language_feature] = { 0 };
+	float bF[CHANNELS_language_feature_3d] = { 0 };
 	float max_weight = 0.0f;
 	uint32_t max_id = 0;
 
@@ -372,6 +373,10 @@ renderCUDA(
 				for (int ch = 0; ch < CHANNELS_language_feature; ch++)
 					F[ch] += language_feature[collected_id[j] * CHANNELS_language_feature + ch] * alpha * T;
 			}
+			if(mode==M_OURS){
+				for (int ch = 0; ch < CHANNELS_language_feature_3d; ch++)
+					bF[ch] += language_feature_3d[collected_id[j] * CHANNELS_language_feature_3d + ch] * alpha * T;
+			}
 
 			T = test_T;
 			if(alpha * T > max_weight){
@@ -400,8 +405,10 @@ renderCUDA(
 				out_language_feature[ch * H * W + pix_id] = F[ch]; //bg_color ???
 		}
 		if(mode==M_OURS){
-			for (int ch = 0; ch < CHANNELS_language_feature_3d; ch++)
+			for (int ch = 0; ch < CHANNELS_language_feature_3d; ch++){
 				out_language_feature_3d[ch * H * W + pix_id] = language_feature_3d[max_id * CHANNELS_language_feature_3d + ch];
+				out_blending_language_feature_3d[ch * H * W + pix_id] = bF[ch];
+			}
 			// out_language_feature_3d[pix_id] = max_contrib[pix_id];
 		}
 	}
