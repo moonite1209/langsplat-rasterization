@@ -62,6 +62,7 @@ namespace FORWARD
 		uint32_t* n_contrib,
 		int* max_contributor,
 		float* max_contribute,
+		float* max_contribute_accm,
 		const float* bg_color,
 		float* out_color,
 		float* out_language_feature,

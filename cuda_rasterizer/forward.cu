@@ -276,6 +276,7 @@ renderCUDA(
 	uint32_t* __restrict__ n_contrib,
 	int* __restrict__ max_contributor,
 	float* __restrict__ max_contribute,
+	float* __restrict__ max_contribute_accm,
 	const float* __restrict__ bg_color,
 	float* __restrict__ out_color,
 	float* __restrict__ out_language_feature,
@@ -398,6 +399,7 @@ renderCUDA(
 		n_contrib[pix_id] = last_contributor; // 最后一个贡献的2D gaussian是谁
 		max_contributor[pix_id] = max_id;
 		max_contribute[pix_id] = max_weight;
+		atomicAdd(&max_contribute_accm[max_id], max_weight);
 		for (int ch = 0; ch < CHANNELS; ch++)
 			out_color[ch * H * W + pix_id] = C[ch] + T * bg_color[ch]; //加上背景颜色
 		
@@ -431,6 +433,7 @@ void FORWARD::render(
 	uint32_t* n_contrib,
 	int* max_contributor,
 	float* max_contribute,
+	float* max_contribute_accm,
 	const float* bg_color,
 	float* out_color,
 	float* out_language_feature,
@@ -451,6 +454,7 @@ void FORWARD::render(
 		n_contrib,
 		max_contributor,
 		max_contribute,
+		max_contribute_accm,
 		bg_color,
 		out_color,
 		out_language_feature,

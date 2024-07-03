@@ -57,6 +57,7 @@ namespace CudaRasterizer
 			int* radii = nullptr,
 			int* max_contributor = nullptr,
 			float* max_contribute = nullptr,
+			float* max_contribute_accm = nullptr,
 			bool debug = false,
 			int mode=0);
 

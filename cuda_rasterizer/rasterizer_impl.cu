@@ -226,6 +226,7 @@ int CudaRasterizer::Rasterizer::forward(
 	int* radii,
 	int* max_contributor,
 	float* max_contribute,
+	float* max_contribute_accm,
 	bool debug,
 	int mode)
 {
@@ -361,6 +362,7 @@ int CudaRasterizer::Rasterizer::forward(
 		imgState.n_contrib,
 		max_contributor,
 		max_contribute,
+		max_contribute_accm,
 		background,
 		out_color,
 		out_language_feature,
