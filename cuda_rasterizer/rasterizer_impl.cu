@@ -398,6 +398,7 @@ void CudaRasterizer::Rasterizer::backward(
 	const float* campos,
 	const float tan_fovx, float tan_fovy,
 	const int* radii,
+	const int* max_contributor,
 	char* geom_buffer,
 	char* binning_buffer,
 	char* img_buffer,
@@ -427,6 +428,9 @@ void CudaRasterizer::Rasterizer::backward(
 	{
 		radii = geomState.internal_radii;
 	}
+	if(max_contributor == nullptr){
+		max_contributor = imgState.max_contributor;
+	}
 
 	const float focal_y = height / (2.0f * tan_fovy);
 	const float focal_x = width / (2.0f * tan_fovx);
@@ -455,7 +459,7 @@ void CudaRasterizer::Rasterizer::backward(
 		language_feature_3d_ptr,
 		imgState.accum_alpha, //输入最终透明度
 		imgState.n_contrib, //输入最后一个有贡献的高斯球
-		imgState.max_contributor, //输入贡献最大的高斯球
+		max_contributor, //输入贡献最大的高斯球
 		dL_dpix, //输入颜色梯度
 		dL_dpix_F, //输入特征梯度
 		dL_dpix_F_3d, //输入特征梯度

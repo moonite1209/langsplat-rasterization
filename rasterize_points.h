@@ -45,6 +45,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Te
  	const torch::Tensor& background,
 	const torch::Tensor& means3D,
 	const torch::Tensor& radii,
+	const torch::Tensor& max_contributor,
     const torch::Tensor& colors,
 	const torch::Tensor& language_feature,
 	const torch::Tensor& language_feature_3d,
