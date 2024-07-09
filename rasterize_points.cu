@@ -87,6 +87,8 @@ RasterizeGaussiansCUDA(
 	out_blending_language_feature_3d = torch::full({1}, 0.0, float_opts);
   }
   torch::Tensor radii = torch::full({P}, 0, means3D.options().dtype(torch::kInt32));
+//   torch::Tensor max_contributor = torch::full({H, W}, 0, means3D.options().dtype(torch::kInt32));
+//   torch::Tensor max_contribute = torch::full({H, W}, 0.0, means3D.options().dtype(torch::kFloat32));
   torch::Tensor max_contributor = torch::full({H, W}, 0, means3D.options().dtype(torch::kInt32));
   torch::Tensor max_contribute = torch::full({H, W}, 0.0, means3D.options().dtype(torch::kFloat32));
   torch::Tensor max_contribute_accm = torch::full({P}, 0, means3D.options().dtype(torch::kFloat32));
@@ -150,6 +152,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Te
  	const torch::Tensor& background,
 	const torch::Tensor& means3D,
 	const torch::Tensor& radii,
+	const torch::Tensor& max_contributor,
     const torch::Tensor& colors,
 	const torch::Tensor& language_feature,
 	const torch::Tensor& language_feature_3d,
@@ -231,6 +234,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Te
 	  tan_fovx,
 	  tan_fovy,
 	  radii.contiguous().data<int>(),
+	  max_contributor.contiguous().data<int>(),
 	  reinterpret_cast<char*>(geomBuffer.contiguous().data_ptr()),
 	  reinterpret_cast<char*>(binningBuffer.contiguous().data_ptr()),
 	  reinterpret_cast<char*>(imageBuffer.contiguous().data_ptr()),
