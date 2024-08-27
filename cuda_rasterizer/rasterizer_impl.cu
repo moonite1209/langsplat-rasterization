@@ -10,6 +10,8 @@
  */
 
 #include "rasterizer_impl.h"
+#include <__clang_cuda_math.h>
+#include <cstdint>
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -201,6 +203,7 @@ int CudaRasterizer::Rasterizer::forward(
 	std::function<char* (size_t)> geometryBuffer,
 	std::function<char* (size_t)> binningBuffer,
 	std::function<char* (size_t)> imageBuffer,
+	std::function<char* (size_t)> weightBuffer,
 	const int P, int D, int M,
 	const float* background,
 	const int width, int height,
@@ -336,7 +339,18 @@ int CudaRasterizer::Rasterizer::forward(
 			binningState.point_list_keys,
 			imgState.ranges);
 	// CHECK_CUDA(, debug)
-
+	uint64_t max_len = 0;
+	for (int y = 0; y < tile_grid.y; y++)
+	{
+		for (int x = 0; x < tile_grid.x; x++)
+		{
+			uint64_t key = y * tile_grid.x + x;
+			uint64_t len = imgState.ranges[key].y - imgState.ranges[key].x;
+			if(len > max_len)
+				max_len = len;
+		}
+	}
+	char* weight = weightBuffer(width * height * max_len * sizeof(float));
 	// Let each tile blend its range of Gaussians independently in parallel
 	const float* feature_ptr = colors_precomp != nullptr ? colors_precomp : geomState.rgb;
 	const float* language_feature_ptr = language_feature_precomp;

@@ -98,9 +98,11 @@ RasterizeGaussiansCUDA(
   torch::Tensor geomBuffer = torch::empty({0}, options.device(device));
   torch::Tensor binningBuffer = torch::empty({0}, options.device(device));
   torch::Tensor imgBuffer = torch::empty({0}, options.device(device));
+  torch::Tensor weightBuffer = torch::empty({0}, options.device(device));
   std::function<char*(size_t)> geomFunc = resizeFunctional(geomBuffer);
   std::function<char*(size_t)> binningFunc = resizeFunctional(binningBuffer);
   std::function<char*(size_t)> imgFunc = resizeFunctional(imgBuffer);
+  std::function<char*(size_t)> weightFunc = resizeFunctional(weightBuffer);
   
   int rendered = 0;
   if(P != 0)
@@ -114,6 +116,7 @@ RasterizeGaussiansCUDA(
 	    geomFunc,
 		binningFunc,
 		imgFunc,
+		weightFunc,
 	    P, degree, M,
 		background.contiguous().data<float>(),
 		W, H,
