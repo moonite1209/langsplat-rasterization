@@ -10,7 +10,6 @@
  */
 
 #include "rasterizer_impl.h"
-#include <__clang_cuda_math.h>
 #include <cstdint>
 #include <iostream>
 #include <fstream>
