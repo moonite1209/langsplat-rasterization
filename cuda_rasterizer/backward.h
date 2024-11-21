@@ -29,22 +29,18 @@ namespace BACKWARD
 		const float2* means2D,
 		const float4* conic_opacity,
 		const float* colors,
-		const float* language_feature,
 		const float* language_feature_3d,
 		const float* final_Ts,
 		const uint32_t* n_contrib,
 		const int* max_contrib,
 		const float* dL_dpixels,
-		const float* dL_dpixels_F,
 		const float* dL_dpixels_F_3d,
 		const float* dL_dpixels_bF_3d,
 		float3* dL_dmean2D,
 		float4* dL_dconic2D,
 		float* dL_dopacity,
 		float* dL_dcolors,
-		float* dL_dlanguage_feature,
-		float* dL_dlanguage_feature_3d,
-		int mode);
+		float* dL_dlanguage_feature_3d);
 
 	void preprocess(
 		int P, int D, int M,

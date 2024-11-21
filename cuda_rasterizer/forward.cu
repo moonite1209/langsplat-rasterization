@@ -279,8 +279,7 @@ renderCUDA(
 	const float* __restrict__ bg_color,
 	float* __restrict__ out_color,
 	float* __restrict__ out_language_feature_3d,
-	float* __restrict__ out_blending_language_feature_3d,
-	int mode)
+	float* __restrict__ out_blending_language_feature_3d)
 {
 	// Identify current tile and associated min/max pixel range.
 	auto block = cg::this_thread_block();
@@ -436,7 +435,6 @@ void FORWARD::render(
 		max_contribute_accm,
 		bg_color,
 		out_color,
-		out_language_feature,
 		out_language_feature_3d,
 		out_blending_language_feature_3d);
 
