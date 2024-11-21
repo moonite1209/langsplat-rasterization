@@ -261,7 +261,7 @@ __global__ void preprocessCUDA(int P, int D, int M,
 // Main rasterization method. Collaboratively works on one tile per
 // block, each thread treats one pixel. Alternates between fetching 
 // and rasterizing data.
-template <uint32_t CHANNELS, uint32_t CHANNELS_language_feature, uint32_t CHANNELS_language_feature_3d>
+template <uint32_t CHANNELS, uint32_t CHANNELS_language_feature_3d>
 __global__ void __launch_bounds__(BLOCK_X * BLOCK_Y)
 renderCUDA(
 	const uint2* __restrict__ ranges,
@@ -269,7 +269,6 @@ renderCUDA(
 	int W, int H,
 	const float2* __restrict__ points_xy_image,
 	const float* __restrict__ features,
-	const float* __restrict__ language_feature,
 	const float* __restrict__ language_feature_3d,
 	const float4* __restrict__ conic_opacity,
 	float* __restrict__ final_T,
@@ -279,7 +278,6 @@ renderCUDA(
 	float* __restrict__ max_contribute_accm,
 	const float* __restrict__ bg_color,
 	float* __restrict__ out_color,
-	float* __restrict__ out_language_feature,
 	float* __restrict__ out_language_feature_3d,
 	float* __restrict__ out_blending_language_feature_3d,
 	int mode)
@@ -313,7 +311,6 @@ renderCUDA(
 	uint32_t contributor = 0;
 	uint32_t last_contributor = 0;
 	float C[CHANNELS] = { 0 };
-	float F[CHANNELS_language_feature] = { 0 };
 	float bF[CHANNELS_language_feature_3d] = { 0 };
 	float max_weight = 0.0f;
 	int max_id = 0;
@@ -370,15 +367,8 @@ renderCUDA(
 			for (int ch = 0; ch < CHANNELS; ch++)
 				C[ch] += features[collected_id[j] * CHANNELS + ch] * alpha * T; //alpha * T为当前3dgs球的颜色在最终结果中的占比
 
-			if (mode==M_LANGSPLAT)
-			{
-				for (int ch = 0; ch < CHANNELS_language_feature; ch++)
-					F[ch] += language_feature[collected_id[j] * CHANNELS_language_feature + ch] * alpha * T;
-			}
-			if(mode==M_OURS){
-				for (int ch = 0; ch < CHANNELS_language_feature_3d; ch++)
-					bF[ch] += language_feature_3d[collected_id[j] * CHANNELS_language_feature_3d + ch] * alpha * T;
-			}
+			for (int ch = 0; ch < CHANNELS_language_feature_3d; ch++)
+				bF[ch] += language_feature_3d[collected_id[j] * CHANNELS_language_feature_3d + ch] * alpha * T;
 
 			T = test_T;
 			if(alpha * T > max_weight){
@@ -403,18 +393,11 @@ renderCUDA(
 		for (int ch = 0; ch < CHANNELS; ch++)
 			out_color[ch * H * W + pix_id] = C[ch] + T * bg_color[ch]; //加上背景颜色
 		
-		if (mode==M_LANGSPLAT) 
-		{
-			for (int ch = 0; ch < CHANNELS_language_feature; ch++)
-				out_language_feature[ch * H * W + pix_id] = F[ch]; //bg_color ???
+		for (int ch = 0; ch < CHANNELS_language_feature_3d; ch++){
+			out_language_feature_3d[ch * H * W + pix_id] = language_feature_3d[max_id * CHANNELS_language_feature_3d + ch];
+			out_blending_language_feature_3d[ch * H * W + pix_id] = bF[ch];
 		}
-		if(mode==M_OURS){
-			for (int ch = 0; ch < CHANNELS_language_feature_3d; ch++){
-				out_language_feature_3d[ch * H * W + pix_id] = language_feature_3d[max_id * CHANNELS_language_feature_3d + ch];
-				out_blending_language_feature_3d[ch * H * W + pix_id] = bF[ch];
-			}
-			// out_language_feature_3d[pix_id] = max_contrib[pix_id];
-		}
+		// out_language_feature_3d[pix_id] = max_contrib[pix_id];
 	}
 
 }
@@ -426,7 +409,6 @@ void FORWARD::render(
 	int W, int H,
 	const float2* means2D,
 	const float* colors,
-	const float* language_feature,
 	const float* language_feature_3d,
 	const float4* conic_opacity,
 	float* final_T,
@@ -436,18 +418,15 @@ void FORWARD::render(
 	float* max_contribute_accm,
 	const float* bg_color,
 	float* out_color,
-	float* out_language_feature,
 	float* out_language_feature_3d,
-	float* out_blending_language_feature_3d,
-	int mode)
+	float* out_blending_language_feature_3d)
 {
-	renderCUDA<NUM_CHANNELS, NUM_CHANNELS_language_feature, NUM_CHANNELS_language_feature_3d> <<<grid, block >>> (
+	renderCUDA<NUM_CHANNELS, NUM_CHANNELS_language_feature_3d> <<<grid, block >>> (
 		ranges,
 		point_list,
 		W, H,
 		means2D,
 		colors,
-		language_feature,
 		language_feature_3d,
 		conic_opacity,
 		final_T,
@@ -459,8 +438,7 @@ void FORWARD::render(
 		out_color,
 		out_language_feature,
 		out_language_feature_3d,
-		out_blending_language_feature_3d,
-		mode);
+		out_blending_language_feature_3d);
 
 }
 
