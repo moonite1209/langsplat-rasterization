@@ -361,8 +361,7 @@ int CudaRasterizer::Rasterizer::forward(
 		background,
 		out_color,
 		out_language_feature_3d,
-		out_blending_language_feature_3d,
-		mode), debug) // 增加了参数
+		out_blending_language_feature_3d), debug) // 增加了参数
 
 
 	// cudaEventRecord(stop, stream);
@@ -455,7 +454,7 @@ void CudaRasterizer::Rasterizer::backward(
 		(float4*)dL_dconic, //输出
 		dL_dopacity, //输出
 		dL_dcolor, //输出
-		dL_dlanguage_feature_3d, //输出
+		dL_dlanguage_feature_3d //输出
 		), debug)
 
 	// Take care of the rest of preprocessing. Was the precomputed covariance

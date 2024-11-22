@@ -398,7 +398,7 @@ __global__ void preprocessCUDA(
 }
 
 // Backward version of the rendering procedure.
-template <uint32_t C, uint32_t F, uint32_t F_3d>
+template <uint32_t C, uint32_t F_3d>
 __global__ void __launch_bounds__(BLOCK_X * BLOCK_Y)
  renderCUDA(
 	const uint2* __restrict__ ranges,
@@ -465,9 +465,9 @@ __global__ void __launch_bounds__(BLOCK_X * BLOCK_Y)
 	float last_alpha = 0;
 	float last_color[C] = { 0 };
 
-	float accum_rec_bF_3d[F] = {0};
+	float accum_rec_bF_3d[F_3d] = {0};
 	float dL_dpixel_bF_3d[F_3d] = {0};
-	float last_language_feature_3d[F] = {0};
+	float last_language_feature_3d[F_3d] = {0};
 
 	if (inside)
 		for (int i = 0; i < F_3d; i++)
